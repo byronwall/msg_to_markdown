@@ -1,9 +1,12 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
-import App from './App';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { App } from './App';
 
-test('renders learn react link', () => {
+test('converts HTML entered in the textarea and clears the result', () => {
   render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+  const input = screen.getByRole('textbox');
+  fireEvent.change(input, { target: { value: '<p>Hello <strong>world</strong></p>' } });
+  expect(screen.getByText('Hello **world**')).toBeInTheDocument();
+  fireEvent.change(input, { target: { value: '' } });
+  expect(screen.queryByText('Hello **world**')).not.toBeInTheDocument();
 });

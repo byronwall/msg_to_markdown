@@ -24,17 +24,47 @@ export class App extends React.PureComponent<AppProps, AppState> {
     return (
       <div onPaste={this.handlePaste} style={{ backgroundColor: "#ccc" }}>
         <h1>msg to markdown</h1>
+        <h2>usage</h2>
+        <p>
+          You can paste HTML content with CTRL+V. If you have HTML text on the
+          clipboard, you can also paste to the textarea.
+        </p>
         <textarea value={this.state.data} onChange={this.handleTextChange} />
-        <div style={{ display: "flex", flexDirection: "row" }}>
-          <pre style={{ minWidth: 0, flex: 1 }}>{this.state.data}</pre>
-          <pre style={{ minWidth: 0, flex: 1 }}>{this.state.markdown}</pre>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            width: "100%",
+            height: "75vh",
+            justifyContent: "space-between",
+          }}
+        >
+          <div style={{ width: "48%", overflowX: "scroll" }}>
+            <h2>HTML (parsed)</h2>
+            <pre>{this.state.data}</pre>
+          </div>
+
+          <pre style={{ width: "48%", overflowX: "scroll" }}>
+            <h2>
+              markdown{" "}
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(this.state.markdown);
+                }}
+              >
+                copy
+              </button>
+            </h2>
+            {this.state.markdown}
+          </pre>
         </div>
       </div>
     );
   }
 
   handlePaste: ClipboardEventHandler<HTMLDivElement> | undefined = (e) => {
-    const _data = e.clipboardData.getData("text");
+    if (e.target instanceof HTMLTextAreaElement) return;
+    const _data = e.clipboardData.getData("text/html");
     const data = cleanUpNastyMsgHtml(_data);
 
     console.log(data);
@@ -100,7 +130,10 @@ export class App extends React.PureComponent<AppProps, AppState> {
               }
             }
 
-            results.push(node.textContent);
+            // write a <p> tag with bare text
+
+            // TODO: add formatting
+            results.push(`<p>${node.textContent}</p>`);
           }
 
           break;
@@ -129,8 +162,9 @@ export class App extends React.PureComponent<AppProps, AppState> {
     e
   ) => {
     const data = e.target.value;
-
-    this.setState({ data });
+    const turndown = new TurndownService();
+    turndown.use(tables);
+    this.setState({ data, markdown: turndown.turndown(data) });
   };
 }
 
