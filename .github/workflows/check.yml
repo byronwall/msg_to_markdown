@@ -1,0 +1,16 @@
+name: Check
+on: [pull_request]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      NODE_OPTIONS: --openssl-legacy-provider
+      CI: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npx --yes npm@6 ci --ignore-scripts
+      - run: npm test -- --watchAll=false --runInBand
+      - run: npm run build
